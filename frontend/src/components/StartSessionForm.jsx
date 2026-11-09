@@ -1,0 +1,235 @@
+// Import React state management
+import { useState, useRef } from "react";
+
+// Import the session context used to start a new student session
+import { useSession } from "../Context/SessionContext";
+
+// Displays the form used to create a new student session.
+function StartSessionForm({ onBack }) {
+  // Get the function responsible for starting the student session
+  const { startStudentSession } = useSession();
+
+  // Store the student's entered information
+  const [formData, setFormData] = useState({
+    name: "",
+    studentId: "",
+    gender: "",
+  });
+
+  // Store an error message if the session cannot be started
+  const [error, setError] = useState("");
+
+  // Track whether the participant confirmed they filled the research questionnaire
+  const [filledQuestionnaire, setFilledQuestionnaire] = useState(false);
+
+  // Track whether a session is currently being created, so the button shows a
+  // loading state and cannot be clicked more than once.
+  const [submitting, setSubmitting] = useState(false);
+
+  // A synchronous guard against rapid double-clicks (state updates are async,
+  // so a ref catches the extra clicks that fire before the re-render).
+  const submittingRef = useRef(false);
+
+  // Link to the research questionnaire the participant must complete before entering
+  const QUESTIONNAIRE_URL = "https://forms.gle/AmGP82AB2KGSSgRQ8";
+
+  // Update the matching form field whenever an input changes
+  function handleChange(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  }
+
+  // Submit the student information and start a new session
+  async function handleSubmit(e) {
+    // Prevent the browser from refreshing the page
+    e.preventDefault();
+
+    // Ignore extra clicks while a session is already being created. This stops
+    // the same participant from being created several times.
+    if (submittingRef.current) return;
+
+    // Clear any previous error message
+    setError("");
+
+    // Require a full name before starting the session
+    if (!formData.name.trim()) {
+      setError("Please enter your full name");
+      return;
+    }
+
+    // Require the participant to choose a gender
+    if (!formData.gender) {
+      setError("Please select a gender");
+      return;
+    }
+
+    // Require the participant to confirm they filled the research questionnaire
+    if (!filledQuestionnaire) {
+      setError("Please fill out the questionnaire and check the box before entering");
+      return;
+    }
+
+    // Lock submission (synchronous ref first, then UI state)
+    submittingRef.current = true;
+    setSubmitting(true);
+
+    try {
+      // Send the student information through the session context. We also send
+      // the entry-questionnaire confirmation so the admin panel can show it.
+      await startStudentSession({ ...formData, filledQuestionnaire });
+      // On success the app navigates to the session, so this component unmounts.
+    } catch (err) {
+      // Display an error if the session cannot be started, and allow a retry
+      setError("Something went wrong while starting the session. Please try again.");
+      console.error(err);
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="flex w-full flex-col items-center justify-center px-4 py-12 md:pt-[10vh]">
+      
+      {/* Light/Dark mode glassmorphism card */}
+      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/80 p-6 sm:p-8 shadow-xl backdrop-blur-xl dark:border-white/5 dark:bg-[#1e2333]/80 dark:shadow-2xl">
+        {/* Form title and instructions */}
+        <div className="mb-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            SystemThinker AI
+          </h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-gray-400" dir="ltr">
+            Enter your details to begin the session
+          </p>
+        </div>
+
+        {/* Submit the student details through handleSubmit.
+            autoComplete="off" stops the browser from suggesting previously typed
+            values (that dropdown is per-device browser history, not app data). */}
+        <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off" dir="ltr">
+          {/* Student full-name input (required) */}
+          <div>
+            <input
+              name="name"
+              autoComplete="off"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Full name"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-left text-slate-900 placeholder-slate-400 transition-all focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-transparent dark:bg-[#2a2f42]/80 dark:text-white dark:placeholder-gray-400 dark:focus:bg-[#2a2f42]"
+              required
+            />
+          </div>
+
+          {/* Optional student ID input */}
+          <div>
+            <input
+              name="studentId"
+              autoComplete="off"
+              value={formData.studentId}
+              onChange={handleChange}
+              placeholder="ID number (optional)"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-left text-slate-900 placeholder-slate-400 transition-all focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 dark:border-transparent dark:bg-[#2a2f42]/80 dark:text-white dark:placeholder-gray-400 dark:focus:bg-[#2a2f42]"
+            />
+          </div>
+
+          {/* Gender selection (required) — only Male / Female */}
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">Gender</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border p-3 text-sm font-bold transition-all ${
+                    formData.gender === option.value
+                      ? "border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:border-purple-300 dark:border-transparent dark:bg-[#2a2f42]/80 dark:text-slate-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={option.value}
+                    checked={formData.gender === option.value}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Research questionnaire — must be filled before entering */}
+          <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-500/30 dark:bg-purple-500/10">
+            <p className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Before entering, please fill out the research questionnaire:
+            </p>
+
+            {/* Link that opens the questionnaire in a new tab */}
+            <a
+              href={QUESTIONNAIRE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mb-3 inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-purple-700"
+            >
+              Open the questionnaire ↗
+            </a>
+
+            {/* Confirmation checkbox that unlocks the Start button */}
+            <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-700 dark:text-slate-200">
+              <input
+                type="checkbox"
+                checked={filledQuestionnaire}
+                onChange={(e) => setFilledQuestionnaire(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-purple-600"
+              />
+              <span>I have filled out the questionnaire</span>
+            </label>
+
+            {/* Guidance for the participant */}
+            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-200">
+              Only after filling out the questionnaire, check the box. Click the "Start Session" button once to begin the experiment and please wait patiently.
+            </p>
+          </div>
+
+          {/* Display an error message when session creation fails */}
+          {error && (
+            <p className="text-center text-sm font-medium text-red-500 dark:text-red-400">
+              {error}
+            </p>
+          )}
+
+          {/* Start the student session */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={!filledQuestionnaire || submitting}
+              className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 py-3.5 font-bold text-white shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] hover:shadow-purple-500/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 dark:focus:ring-offset-[#1e2333]"
+            >
+              {submitting ? "Connecting… please wait" : "Start Session"}
+            </button>
+          </div>
+
+          {/* Return to the landing page */}
+          <div className="mt-4 text-center">
+            <button 
+              type="button"
+              onClick={onBack} 
+              className="text-sm font-medium text-slate-500 hover:text-purple-600 dark:text-slate-400 dark:hover:text-purple-400 transition-colors"
+            >
+              &larr; Back to Home
+            </button>
+          </div>
+
+        </form>
+      </section>
+    </div>
+  );
+}
+
+// Export the component for use in other parts of the application
+export default StartSessionForm;
