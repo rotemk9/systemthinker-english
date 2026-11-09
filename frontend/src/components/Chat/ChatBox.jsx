@@ -28,11 +28,6 @@ const REVEAL_SCHEDULE = [
     text:
       "⚠️ Airport status update: a third event has been added — an airline moves up the boarding gate of a large flight, suddenly pulling a crowd of passengers to one area of the terminal. How does it fit with what you have already identified?",
   },
-  {
-    afterMs: 21 * 60 * 1000,
-    text:
-      "⚠️ Airport status update: a fourth event has been added — because of stormy weather and the large number of aircraft currently on the apron, moving aircraft toward the main runway is delayed by about 20 minutes, disrupting the schedule of other aircraft waiting to land and take off. How does this event fit with the systems picture you have identified so far?",
-  },
 ];
 
 // Display and manage the main chat interface
