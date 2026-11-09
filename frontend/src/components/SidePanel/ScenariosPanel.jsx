@@ -12,7 +12,6 @@ const SCENARIOS = [
   { afterMs: 0, text: "The automated baggage-sorting system slows to 60% of its normal rate due to a conveyor-belt fault." },
   { afterMs: 7 * 60 * 1000, text: "Two of the eight security-screening stations close due to a staff shortage." },
   { afterMs: 14 * 60 * 1000, text: "An airline moves up the boarding gate of a large flight — a crowd of passengers is pulled at once to one area." },
-  { afterMs: 21 * 60 * 1000, text: "Stormy weather and aircraft congestion delay moving planes to the main runway by about 20 minutes, disrupting other aircraft's schedules." },
 ];
 
 // Displays the background story and reveals the scenarios one by one over time,
