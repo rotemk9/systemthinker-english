@@ -44,11 +44,10 @@ function ChatHeader({ startTime, onTimeUp, onReminder }) {
           Time Remaining
         </span>
 
-        {/* Countdown timer configured for a twenty-five-minute session
-            (long enough for the fourth scenario, revealed at 21 minutes) */}
+        {/* Countdown timer configured for a twenty-minute session */}
         <CountdownTimer
           startTime={startTime}
-          initialMinutes={25}
+          initialMinutes={20}
           onTimeUp={onTimeUp}
           onReminder={onReminder}
         />
