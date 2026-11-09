@@ -20,7 +20,6 @@ const AIRPORT_EVENTS = [
   "The automated baggage-sorting system slows to 60% of its normal rate because of a conveyor-belt fault.",
   "Two of the eight security-screening stations close due to a staff shortage.",
   "An airline moves up the boarding gate of a large flight, suddenly pulling a crowd of passengers to one area of the terminal.",
-  "Because of stormy weather and the large number of aircraft currently on the apron, moving aircraft toward the main runway is delayed by about 20 minutes, disrupting the schedule of other aircraft waiting to land and take off.",
 ];
 
 // Build the text of the events revealed to the student so far
